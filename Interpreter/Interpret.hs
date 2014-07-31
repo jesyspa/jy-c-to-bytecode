@@ -3,6 +3,7 @@ module Interpreter.Interpret (
 ) where
 
 import Bytecode.Ops
+import Bytecode.Representable
 import Interpreter.Debug
 import Interpreter.Error
 import Interpreter.LensHelpers
@@ -34,9 +35,15 @@ step = do
     ip._2 += 1
     exec opcode
 
-exec :: MonadStack m => Op -> m ()
+exec :: forall m. MonadStack m => Op -> m ()
 exec (LocalJmp x) = ip._2 .= x
+exec (LocalJmpIfZero fmt x) = monadicOp f fmt
+    where f :: forall a. NumericRep a => a -> m ()
+          f 0 = ip._2 .= x
+          f _ = return ()
 exec (LoadImmediate x) = pushBS x
+exec (Dup fmt) = monadicOp (\x -> pushValue x >> pushValue x) fmt
+exec (Swap fmt) = monadicBinOp (\x y -> pushValue x >> pushValue y) fmt
 exec WriteChar = popValue >>= liftIO . putChar
 exec (WriteValue fmt) = monadicOp (liftIO . putStr . show) fmt
 exec ReadChar = liftIO getChar >>= pushValue

@@ -21,4 +21,6 @@ executable interpreter
   hs-source-dirs: .
   ghc-options: -Wall
   extensions:
-    TemplateHaskell, ConstraintKinds, FlexibleContexts, RankNTypes
+    TemplateHaskell, ConstraintKinds, FlexibleContexts, RankNTypes,
+    TypeFamilies, FunctionalDependencies, FlexibleInstances,
+    MultiParamTypeClasses, EmptyDataDecls, ViewPatterns, ScopedTypeVariables

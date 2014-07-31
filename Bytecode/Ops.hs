@@ -47,7 +47,7 @@ type PtrOffset = Int
 
 data Op =
     -- Calls
-    LocalJmp Int | LocalJmpIfZero Int | Call String | CallPtr | Return |
+    LocalJmp Int | LocalJmpIfZero Format Int | Call String | CallPtr | Return |
     -- Memory management
     MemAlloc Int | MarkPtrOnStack | MarkAbsolutePtr DataPtr | MarkLocalPtr PtrOffset |
     -- Local load/store
@@ -55,7 +55,7 @@ data Op =
     -- Absolute load/store
     LoadAbsolute Format DataPtr | StoreAbsolute Format DataPtr |
     -- Immediate load
-    LoadImmediate ByteString |
+    LoadImmediate ByteString | Dup Format | Swap Format |
     -- Stack arithmetic
     Add Format | Sub Format | Mul Format | Div Format | Mod Format |
     -- Stack bitwise operations
