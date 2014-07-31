@@ -4,8 +4,9 @@ module Interpreter.Interpret (
 
 import Bytecode.Ops
 import Interpreter.Debug
-import Interpreter.Machine
 import Interpreter.Error
+import Interpreter.LensHelpers
+import Interpreter.Machine
 import Interpreter.Monad
 import Interpreter.Stack
 import Interpreter.StackArithmetic
@@ -24,10 +25,11 @@ interpret funs machine = result >>= \x -> case x of
           -- performed, meaning that if the computation completed, we have a Left.
           result = fmap (\(Left x) -> x) . runExceptT $ steps `runReaderT` funs `evalStateT` machine
 
+
 step :: MonadStack m => m ()
 step = do
     (funname, offset) <- use ip
-    fun <- at funname . (to . fmap . view) code `viewOr` InvalidFunction
+    fun <- at funname . mapGetter code `viewOr` InvalidFunction
     opcode <- fun !? offset `fromMaybeOr` CodeOutOfBounds
     ip._2 += 1
     exec opcode
