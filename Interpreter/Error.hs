@@ -7,5 +7,6 @@ data InterpError =
     InvalidFunction | CodeOutOfBounds |
     NotImplementedError |
     StackUnderflow |
+    UnrepresentableValueError |
     ExitSuccess
     deriving (Eq, Ord, Read, Show)

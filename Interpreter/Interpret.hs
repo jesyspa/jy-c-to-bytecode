@@ -3,15 +3,17 @@ module Interpreter.Interpret (
 ) where
 
 import Bytecode.Ops
-import Interpreter.Cell
+import Interpreter.Debug
 import Interpreter.Machine
 import Interpreter.Error
+import Interpreter.Monad
+import Interpreter.Stack
+import Interpreter.StackArithmetic
 import Control.Monad.State
 import Control.Monad.Except
 import Control.Monad.Reader
 import Control.Lens
 import Data.Vector
-import Data.Char (chr)
 
 interpret :: FunctionSpace -> Machine -> IO ()
 interpret funs machine = result >>= \x -> case x of
@@ -22,20 +24,6 @@ interpret funs machine = result >>= \x -> case x of
           -- performed, meaning that if the computation completed, we have a Left.
           result = fmap (\(Left x) -> x) . runExceptT $ steps `runReaderT` funs `evalStateT` machine
 
-type MonadStack m = (MonadReader FunctionSpace m, MonadState Machine m, MonadError InterpError m, MonadIO m)
-
-fromMaybeOr :: (MonadError e m) => Maybe a -> e -> m a
-fromMaybeOr v e = maybe (throwError e) return v
-
-infix 0 `useOr`
-useOr :: (MonadError e m, MonadState s m) => Getting (Maybe a) s (Maybe a) -> e -> m a
-useOr g e = use g >>= maybe (throwError e) return
-
-infix 0 `viewOr`
-viewOr :: (MonadError e m, MonadReader s m) => Getting (Maybe a) s (Maybe a) -> e -> m a
-viewOr g e = view g >>= maybe (throwError e) return
-
-
 step :: MonadStack m => m ()
 step = do
     (funname, offset) <- use ip
@@ -43,20 +31,15 @@ step = do
     opcode <- fun !? offset `fromMaybeOr` CodeOutOfBounds
     ip._2 += 1
     exec opcode
-    --undefined
-
-popStack :: MonadStack m => m Cell
-popStack = stack . to (^?_head) `useOr` StackUnderflow
-
-pushStack :: MonadStack m => Cell -> m ()
-pushStack v = stack %= (v:)
-
-cellAsChar :: Cell -> Char
-cellAsChar (ByteCell _ x) = chr $ fromIntegral x
-cellAsChar (NameCell _) = '\0'
 
 exec :: MonadStack m => Op -> m ()
-exec (LoadImmediate Byte x) = pushStack $ ByteCell None (fromIntegral x)
-exec WriteChar = popStack >>= liftIO . putChar . cellAsChar
+exec (LoadImmediate x) = pushBS x
+exec WriteChar = popValue >>= liftIO . putChar
+exec (WriteValue fmt) = monadicOp (liftIO . putStr . show) fmt
+exec ReadChar = liftIO getChar >>= pushValue
 exec Exit = throwError ExitSuccess
+exec (Add fmt) = binOp (+) fmt
+exec (Sub fmt) = binOp (-) fmt
+exec (Mul fmt) = binOp (*) fmt
+exec DumpStack = get >>= dumpStack
 exec _ = error "unexpected opcode"

@@ -17,8 +17,8 @@ executable compiler
 executable interpreter
   main-is: Interpreter.hs
   build-depends:
-    base, mtl, containers, vector, lens
+    base, mtl, containers, vector, lens, bytestring, binary
   hs-source-dirs: .
   ghc-options: -Wall
   extensions:
-    TemplateHaskell, ConstraintKinds, FlexibleContexts
+    TemplateHaskell, ConstraintKinds, FlexibleContexts, RankNTypes

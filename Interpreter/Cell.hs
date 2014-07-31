@@ -1,9 +1,10 @@
 module Interpreter.Cell (
     Tag(..),
-    Cell(..)
+    Cell(..),
+    cellToWord8
 ) where
 
-import Data.Word
+import Data.Word (Word8)
 
 data Tag = PtrStart | None
          deriving (Eq, Ord, Read, Show)
@@ -14,3 +15,6 @@ data Tag = PtrStart | None
 data Cell = ByteCell Tag Word8 | NameCell String
           deriving (Eq, Ord, Read, Show)
 
+cellToWord8 :: Cell -> Word8
+cellToWord8 (ByteCell _ x) = x
+cellToWord8 (NameCell _) = 0

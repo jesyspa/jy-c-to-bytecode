@@ -5,6 +5,9 @@ module Bytecode.Ops (
     Format(..)
 ) where
 
+import Data.ByteString.Lazy (ByteString)
+import Bytecode.Format
+
 {-     The Abstract Machine
  -
  - The machine consists of five parts: the registers, the stack, the heap, and the code.
@@ -42,20 +45,17 @@ module Bytecode.Ops (
 type DataPtr = Int
 type PtrOffset = Int
 
-data Format = Byte | Short | Word | DWord | FWord | FDWord
-          deriving (Eq, Ord, Read, Show)
-
 data Op =
     -- Calls
     LocalJmp Int | LocalJmpIfZero Int | Call String | CallPtr | Return |
-    -- Allocation
-    MemAlloc Int |
+    -- Memory management
+    MemAlloc Int | MarkPtrOnStack | MarkAbsolutePtr DataPtr | MarkLocalPtr PtrOffset |
     -- Local load/store
     LoadLocal Format PtrOffset | StoreLocal Format PtrOffset |
     -- Absolute load/store
     LoadAbsolute Format DataPtr | StoreAbsolute Format DataPtr |
     -- Immediate load
-    LoadImmediate Format Int | LoadImmediateF Format Double |
+    LoadImmediate ByteString |
     -- Stack arithmetic
     Add Format | Sub Format | Mul Format | Div Format | Mod Format |
     -- Stack bitwise operations
@@ -67,5 +67,7 @@ data Op =
     -- Pointer operations
     Deref |
     -- World effects
-    ReadChar | WriteChar | Exit
+    ReadChar | WriteChar | ReadValue Format | WriteValue Format | Exit |
+    -- Debug
+    DumpStack
     deriving (Eq, Ord, Read, Show)
