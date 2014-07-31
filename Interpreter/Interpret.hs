@@ -33,6 +33,7 @@ step = do
     exec opcode
 
 exec :: MonadStack m => Op -> m ()
+exec (LocalJmp x) = ip._2 .= x
 exec (LoadImmediate x) = pushBS x
 exec WriteChar = popValue >>= liftIO . putChar
 exec (WriteValue fmt) = monadicOp (liftIO . putStr . show) fmt
@@ -42,4 +43,4 @@ exec (Add fmt) = binOp (+) fmt
 exec (Sub fmt) = binOp (-) fmt
 exec (Mul fmt) = binOp (*) fmt
 exec DumpStack = get >>= dumpStack
-exec _ = error "unexpected opcode"
+exec _ = throwError NotImplementedError
