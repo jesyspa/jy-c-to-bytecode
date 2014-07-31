@@ -18,9 +18,9 @@ data MStack a
 
 data family Lambda :: * -> (* -> *) -> * -> *
 
-data instance Lambda (Hole -> r) m a = LambdaTakingHole (a -> Lambda r m a)
-data instance Lambda (MStack ()) m a = LambdaMStack { getLambdaMStack :: m () }
-data instance Lambda Hole m a = LambdaHole { getLambdaHole :: a }
+newtype instance Lambda (Hole -> r) m a = LambdaTakingHole (a -> Lambda r m a)
+newtype instance Lambda (MStack ()) m a = LambdaMStack { getLambdaMStack :: m () }
+newtype instance Lambda Hole m a = LambdaHole { getLambdaHole :: a }
 
 class LambdaLike fn where
     type family UnderlyingFun fn (m :: * -> *) a
