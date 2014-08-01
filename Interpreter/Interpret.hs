@@ -8,6 +8,7 @@ import Interpreter.Debug
 import Interpreter.Error
 import Interpreter.LensHelpers
 import Interpreter.Machine
+import Interpreter.Memory
 import Interpreter.Monad
 import Interpreter.Stack
 import Interpreter.StackArithmetic
@@ -44,7 +45,12 @@ exec (LocalJmpIfZero fmt x) = unaryOp f fmt
     where f :: forall a. NumericRep a => a -> m ()
           f 0 = ip._2 .= x
           f _ = return ()
+exec (MemAlloc x) = memAlloc x
+exec SetAFP = popValue >>= (afp .=)
+exec LoadAFP = use afp >>= pushValue
 exec (LoadImmediate x) = pushBS x
+exec (LoadAbsolute fmt x) = loadValueAt x fmt
+exec (StoreAbsolute fmt x) = storeValueAt x fmt
 exec (Dup fmt) = unaryOp (\x -> pushValue x >> pushValue x) fmt
 exec (Swap fmt) = binOp (\x y -> pushValue x >> pushValue y) fmt
 exec WriteChar = popValue >>= liftIO . putChar

@@ -8,5 +8,6 @@ data InterpError =
     NotImplementedError |
     StackUnderflow |
     UnrepresentableValueError |
+    InvalidRead | InvalidWrite |
     ExitSuccess
     deriving (Eq, Ord, Read, Show)

@@ -50,6 +50,8 @@ data Op =
     LocalJmp Int | LocalJmpIfZero Format Int | Call String | CallPtr | Return |
     -- Memory management
     MemAlloc Int | MarkPtrOnStack | MarkAbsolutePtr DataPtr | MarkLocalPtr PtrOffset |
+    -- Activation frame pointer operations
+    SetAFP | LoadAFP |
     -- Local load/store
     LoadLocal Format PtrOffset | StoreLocal Format PtrOffset |
     -- Absolute load/store

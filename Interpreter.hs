@@ -9,7 +9,7 @@ import qualified Data.Vector as V
 
 helloWorld :: FunctionSpace
 helloWorld = M.singleton "main" $ Function 0 helloCode
-    where helloCode = V.fromList $ [load 8, Dup DWord, LocalJmpIfZero DWord 11, load 1, Swap DWord, Sub DWord, Dup DWord, WriteValue DWord, loadChar '\n', WriteChar, LocalJmp 1, Exit]
+    where helloCode = V.fromList $ [MemAlloc 32, load 80, StoreAbsolute DWord 0, LoadAbsolute DWord 0, StoreAbsolute DWord 8, LoadAbsolute DWord 0, WriteValue DWord, loadChar '\n', WriteChar, LoadAbsolute DWord 8, WriteValue DWord, loadChar '\n', WriteChar, Exit]
 
 load :: Int -> Op
 load = LoadImmediate . toRepresentation

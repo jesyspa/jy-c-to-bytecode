@@ -1,7 +1,8 @@
 module Interpreter.Cell (
     Tag(..),
     Cell(..),
-    cellToWord8
+    cellToWord8,
+    word8ToCell
 ) where
 
 import Data.Word (Word8)
@@ -18,3 +19,6 @@ data Cell = ByteCell Tag Word8 | NameCell String
 cellToWord8 :: Cell -> Word8
 cellToWord8 (ByteCell _ x) = x
 cellToWord8 (NameCell _) = 0
+
+word8ToCell :: Word8 -> Cell
+word8ToCell = ByteCell None
