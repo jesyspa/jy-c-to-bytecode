@@ -2,7 +2,9 @@ module Interpreter.Cell (
     Tag(..),
     Cell(..),
     cellToWord8,
-    word8ToCell
+    word8ToCell,
+    cellToStr,
+    strToCell
 ) where
 
 import Data.Word (Word8)
@@ -22,3 +24,10 @@ cellToWord8 (NameCell _) = 0
 
 word8ToCell :: Word8 -> Cell
 word8ToCell = ByteCell None
+
+cellToStr :: Cell -> String
+cellToStr (ByteCell _ _) = "error$invalidFunPtr"
+cellToStr (NameCell x) = x
+
+strToCell :: String -> Cell
+strToCell = NameCell

@@ -5,8 +5,8 @@ module Bytecode.Ops (
     Format(..)
 ) where
 
-import Data.ByteString.Lazy (ByteString)
 import Bytecode.Format
+import Data.Word
 
 {-     The Abstract Machine
  -
@@ -57,7 +57,9 @@ data Op =
     -- Absolute load/store
     LoadAbsolute Format DataPtr | StoreAbsolute Format DataPtr |
     -- Immediate load
-    LoadImmediate ByteString | Dup Format | Swap Format |
+    LoadByte Word8 | LoadShort Word16 | LoadWord Word32 | LoadDWord Word64 | LoadFWord Float | LoadFDWord Double | LoadFun String |
+    -- Stack manipulation
+    Dup Format | Swap Format |
     -- Stack arithmetic
     Add Format | Sub Format | Mul Format | Div Format | Mod Format |
     -- Stack bitwise operations

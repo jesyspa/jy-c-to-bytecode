@@ -7,14 +7,13 @@ module Interpreter.FormatDispatch (
     Constant
 ) where
 
-import Data.Proxy
+import Interpreter.Representable
 import Data.Word
-import Bytecode.Representable
-import Interpreter.Monad
 
--- We use this as a placeholder for a in the types
+-- We use these two as placeholders in Lambda types.  Hole is evaluated to a, while Constant c is evaluated to c.
+-- A lambda should not contain any other types.  (If we need type constructors, those could be added.)
 data Hole
-data Constant a
+data Constant c
 
 data family Lambda :: * -> * -> *
 
@@ -48,7 +47,7 @@ instance LambdaLike (Constant c) where
     wrapf = LambdaConstant
     unwrapf = getLambdaConstant
 
-dispatch :: MonadStack m => (forall a. NumericRep a => Lambda fn a -> Proxy a -> m ()) -> (forall a. NumericRep a => Lambda fn a) -> Format -> m ()
+dispatch :: (forall a. NumericRep a => Lambda fn a -> Proxy a -> r) -> (forall a. NumericRep a => Lambda fn a) -> Format -> r
 dispatch fn f = go
     where pr = Proxy
           go Byte = fn f (pr :: Proxy Word8)

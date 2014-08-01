@@ -3,10 +3,10 @@ module Interpreter.StackArithmetic (
     binOp,
 ) where
 
-import Bytecode.Representable
-import Interpreter.Stack
-import Interpreter.Monad
 import Interpreter.FormatDispatch
+import Interpreter.Monad
+import Interpreter.Representable
+import Interpreter.Stack
 
 unaryOp' :: (Representable a, MonadStack m) => (Lambda (Hole -> Constant (m ())) a) -> Proxy a -> m ()
 unaryOp' (unwrapf -> f) _ = popValue >>= f

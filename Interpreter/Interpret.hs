@@ -3,19 +3,20 @@ module Interpreter.Interpret (
 ) where
 
 import Bytecode.Ops
-import Bytecode.Representable
+import Interpreter.Branching
 import Interpreter.Debug
 import Interpreter.Error
 import Interpreter.LensHelpers
 import Interpreter.Machine
 import Interpreter.Memory
 import Interpreter.Monad
+import Interpreter.Representable
 import Interpreter.Stack
 import Interpreter.StackArithmetic
-import Control.Monad.State
+import Control.Lens
 import Control.Monad.Except
 import Control.Monad.Reader
-import Control.Lens
+import Control.Monad.State
 import Data.Vector
 
 interpret :: FunctionSpace -> Machine -> IO ()
@@ -40,17 +41,24 @@ doThenPush :: (MonadStack m, NumericRep a, Representable b) => (a -> a -> b) -> 
 doThenPush f x y = pushValue $ f x y
 
 exec :: forall m. MonadStack m => Op -> m ()
-exec (LocalJmp x) = ip._2 .= x
-exec (LocalJmpIfZero fmt x) = unaryOp f fmt
-    where f :: forall a. NumericRep a => a -> m ()
-          f 0 = ip._2 .= x
-          f _ = return ()
+exec (LocalJmp x) = localJmp x
+exec (LocalJmpIfZero fmt x) = localJmpIfZero fmt x
+exec (Call fun) = callFun fun
+exec Return = ret
 exec (MemAlloc x) = memAlloc x
-exec SetAFP = popValue >>= (afp .=)
+exec SetAFP = popValue >>= assign afp
 exec LoadAFP = use afp >>= pushValue
-exec (LoadImmediate x) = pushBS x
+exec (LoadByte x) = pushValue x
+exec (LoadShort x) = pushValue x
+exec (LoadWord x) = pushValue x
+exec (LoadDWord x) = pushValue x
+exec (LoadFWord x) = pushValue x
+exec (LoadFDWord x) = pushValue x
+exec (LoadFun x) = pushValue x
 exec (LoadAbsolute fmt x) = loadValueAt x fmt
+exec (LoadLocal fmt x) = use afp >>= \y -> loadValueAt (x+y) fmt
 exec (StoreAbsolute fmt x) = storeValueAt x fmt
+exec (StoreLocal fmt x) = use afp >>= \y -> storeValueAt (x+y) fmt
 exec (Dup fmt) = unaryOp (\x -> pushValue x >> pushValue x) fmt
 exec (Swap fmt) = binOp (\x y -> pushValue x >> pushValue y) fmt
 exec WriteChar = popValue >>= liftIO . putChar

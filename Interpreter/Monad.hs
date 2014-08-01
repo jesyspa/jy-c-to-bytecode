@@ -5,12 +5,12 @@ module Interpreter.Monad (
     viewOr
 ) where
 
-import Interpreter.Machine
 import Interpreter.Error
-import Control.Monad.State
+import Interpreter.Machine
+import Control.Lens
 import Control.Monad.Except
 import Control.Monad.Reader
-import Control.Lens
+import Control.Monad.State
 
 type MonadStack m = (MonadReader FunctionSpace m, MonadState Machine m, MonadError InterpError m, MonadIO m)
 

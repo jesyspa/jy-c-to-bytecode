@@ -2,10 +2,10 @@ module Interpreter.Debug (
     dumpStack
 ) where
 
-import Interpreter.Machine
 import Interpreter.Cell
-import Control.Monad.State
+import Interpreter.Machine
 import Control.Lens
+import Control.Monad.State
 
 printCell :: (MonadIO m) => Cell -> m ()
 printCell (ByteCell PtrStart x) = liftIO $ putStrLn $ "[p] " ++ show x

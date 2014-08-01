@@ -1,21 +1,22 @@
 module Main where
 
 import Bytecode.Ops
-import Bytecode.Representable
-import Interpreter.Machine
 import Interpreter.Interpret (interpret)
+import Interpreter.Machine
+import Data.Char (ord)
 import qualified Data.Map as M
 import qualified Data.Vector as V
 
 helloWorld :: FunctionSpace
-helloWorld = M.singleton "main" $ Function 0 helloCode
-    where helloCode = V.fromList $ [MemAlloc 32, load 80, StoreAbsolute DWord 0, LoadAbsolute DWord 0, StoreAbsolute DWord 8, LoadAbsolute DWord 0, WriteValue DWord, loadChar '\n', WriteChar, LoadAbsolute DWord 8, WriteValue DWord, loadChar '\n', WriteChar, Exit]
+helloWorld = M.fromList [("main", Function 8 mainFun), ("newline", Function 8 printNewline)]
+    where mainFun = V.fromList $ [MemAlloc 8, SetAFP, load 80, WriteValue DWord, Call "newline", Exit]
+          printNewline = V.fromList $ [loadChar '\n', WriteChar, Return]
 
 load :: Int -> Op
-load = LoadImmediate . toRepresentation
+load = LoadDWord . fromIntegral
 
 loadChar :: Char -> Op
-loadChar = LoadImmediate . toRepresentation
+loadChar = LoadByte . fromIntegral . ord
 
 initialMachine :: Machine
 initialMachine = Machine ("main", 0) 0 M.empty []

@@ -10,12 +10,12 @@ module Interpreter.Machine (
     code
 ) where
 
+import Bytecode.Ops
+import Interpreter.Cell
+import Control.Lens
 import qualified Data.Map as M
 import qualified Data.Vector as V
 import qualified Data.Vector.Mutable as V
-import Control.Lens
-import Interpreter.Cell
-import Bytecode.Ops
 
 {- Internal Machine Representation:
  -

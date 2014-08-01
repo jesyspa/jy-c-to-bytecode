@@ -2,22 +2,21 @@ module Interpreter.Memory (
     memAlloc,
     staticLoadValueAt,
     loadValueAt,
+    staticStoreValueAt,
     storeValueAt
 ) where
 
-import Bytecode.Representable
 import Interpreter.Cell
-import Interpreter.Monad
-import Interpreter.Machine
-import Interpreter.Stack
 import Interpreter.Error
 import Interpreter.FormatDispatch
+import Interpreter.Machine
+import Interpreter.Monad
+import Interpreter.Representable
+import Interpreter.Stack
 import Control.Lens
-import Control.Monad.State
 import Control.Monad.Except
 import qualified Data.Map as M
 import qualified Data.Vector.Mutable as V
-import qualified Data.ByteString.Lazy as BS
 
 chooseAddress :: Int -> M.Map Int (V.IOVector Cell) -> Int
 chooseAddress _ mem | M.null mem = 0
@@ -40,8 +39,7 @@ staticLoadValueAt n = do
         sz = formatSize $ format (Proxy :: Proxy a)
     when (i + sz > V.length vec) $ throwError InvalidRead
     repr <- mapM (liftIO . V.read vec) [i..i+sz-1]
-    let mval = fromRepresentation $ BS.pack $ map cellToWord8 repr
-    mval `fromMaybeOr` InvalidRead
+    fromRepresentation repr `fromMaybeOr` InvalidRead
 
 loadValueAt' :: forall m a. (MonadStack m, Representable a) => Lambda (Constant Int) a -> Proxy a -> m ()
 loadValueAt' (unwrapf -> x) _ = staticLoadValueAt x >>= (pushValue :: a -> m ())
@@ -55,7 +53,7 @@ staticStoreValueAt n v = do
     (k, vec) <- M.lookupLE n mem `fromMaybeOr` InvalidWrite
     let i = n - k
         sz = formatSize $ format (Proxy :: Proxy a)
-        repr = map (ByteCell None) $ BS.unpack $ toRepresentation v
+        repr = toRepresentation v
     when (i + sz > V.length vec) $ throwError InvalidWrite
     mapM_ (liftIO . uncurry (V.write vec)) $ zip [i..] repr
 

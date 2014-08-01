@@ -1,4 +1,4 @@
-module Bytecode.Representable (
+module Interpreter.Representable (
     Representable,
     toRepresentation,
     fromRepresentation,
@@ -9,19 +9,29 @@ module Bytecode.Representable (
     NumericRep,
 ) where
 
-import Data.Word
-import Data.Proxy
 import Bytecode.Format
-import Data.ByteString.Lazy (ByteString)
+import Interpreter.Cell
 import Data.Binary (Binary, encode, decodeOrFail)
+import Data.ByteString.Lazy (ByteString, pack, unpack)
+import Data.Proxy
+import Data.Word
 
-class (Binary a, Eq a, Ord a, Read a, Show a) => Representable a where
-    toRepresentation :: a -> ByteString
-    toRepresentation = encode
-    fromRepresentation :: ByteString -> Maybe a
-    fromRepresentation x = case decodeOrFail x of
-                               Right (_, _, a) -> Just a
-                               Left _ -> Nothing
+tryDecode :: Binary a => ByteString -> Maybe a
+tryDecode (decodeOrFail -> x) = case x of
+    Right (_, _, a) -> Just a
+    Left _ -> Nothing
+
+simpleEncode :: Binary a => a -> [Cell]
+simpleEncode = map word8ToCell . unpack . encode
+
+simpleDecode :: Binary a => [Cell] -> Maybe a
+simpleDecode = tryDecode . pack . map cellToWord8
+
+class Binary a => Representable a where
+    toRepresentation :: a -> [Cell]
+    toRepresentation = simpleEncode
+    fromRepresentation :: [Cell] -> Maybe a
+    fromRepresentation = simpleDecode
     format :: Proxy a -> Format
 
 instance Representable Bool where format _ = Byte
@@ -33,6 +43,12 @@ instance Representable Word32 where format _ = Word
 instance Representable Word64 where format _ = DWord
 instance Representable Float where format _ = FWord
 instance Representable Double where format _ = FDWord
+
+instance Representable String where
+    toRepresentation = return . strToCell
+    fromRepresentation (x:_) = Just $ cellToStr x
+    fromRepresentation [] = Nothing
+    format _ = Byte
 
 class (Representable a, Eq a, Ord a, Read a, Show a, Num a) => NumericRep a
 
