@@ -8,8 +8,8 @@ module Interpreter.Branching (
 import Interpreter.Machine
 import Interpreter.Monad
 import Interpreter.Memory
-import Interpreter.Representable
 import Interpreter.StackArithmetic
+import Representation.Representable
 import Control.Lens
 
 localJmp :: MonadStack m => Int -> m ()

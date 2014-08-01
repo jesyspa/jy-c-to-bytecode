@@ -7,7 +7,7 @@ module Interpreter.FormatDispatch (
     Constant
 ) where
 
-import Interpreter.Representable
+import Representation.Representable
 import Data.Word
 
 -- We use these two as placeholders in Lambda types.  Hole is evaluated to a, while Constant c is evaluated to c.

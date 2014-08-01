@@ -1,12 +1,14 @@
 module Bytecode.Ops (
-    Op(..),
-    DataPtr,
-    PtrOffset,
+    GenOp(..),
+    Op,
+    PIOp,
     Format(..)
 ) where
 
 import Bytecode.Format
 import Data.Word
+import Data.Binary
+import GHC.Generics (Generic)
 
 {-     The Abstract Machine
  -
@@ -42,22 +44,21 @@ import Data.Word
  -  * Locals
  -}
 
-type DataPtr = Int
-type PtrOffset = Int
-
-data Op =
+data GenOp label lptr gptr =
     -- Calls
-    LocalJmp Int | LocalJmpIfZero Format Int | Call String | CallPtr | Return |
+    LocalJmp label | LocalJmpIfZero Format Int | Call String | CallPtr | Return |
     -- Memory management
-    MemAlloc Int | MarkPtrOnStack | MarkAbsolutePtr DataPtr | MarkLocalPtr PtrOffset |
+    MemAlloc Int | MarkPtrOnStack | MarkAbsolutePtr gptr | MarkLocalPtr lptr |
     -- Activation frame pointer operations
     SetAFP | LoadAFP |
     -- Local load/store
-    LoadLocal Format PtrOffset | StoreLocal Format PtrOffset |
+    LoadLocal Format lptr| StoreLocal Format lptr |
     -- Absolute load/store
-    LoadAbsolute Format DataPtr | StoreAbsolute Format DataPtr |
+    LoadAbsolute Format gptr | StoreAbsolute Format gptr |
     -- Immediate load
-    LoadByte Word8 | LoadShort Word16 | LoadWord Word32 | LoadDWord Word64 | LoadFWord Float | LoadFDWord Double | LoadFun String |
+    LoadByte Word8 | LoadShort Word16 | LoadWord Word32 | LoadDWord Word64 | LoadFWord Float | LoadFDWord Double |
+    -- Immediate pointer loads
+    LoadFun String | LoadAbsolutePtr gptr | LoadLocalPtr lptr |
     -- Stack manipulation
     Dup Format | Swap Format |
     -- Stack arithmetic
@@ -74,4 +75,10 @@ data Op =
     ReadChar | WriteChar | ReadValue Format | WriteValue Format | Exit |
     -- Debug
     DumpStack
-    deriving (Eq, Ord, Read, Show)
+    deriving (Eq, Ord, Read, Show, Generic, Functor)
+
+type Op = GenOp Int Int Int
+type PIOp = GenOp Int Int (String, Int)
+
+instance Binary Op
+instance Binary PIOp

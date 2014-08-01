@@ -5,11 +5,11 @@ module Interpreter.Stack (
     pushCells
 ) where
 
-import Interpreter.Cell
 import Interpreter.Error
 import Interpreter.Machine
 import Interpreter.Monad
-import Interpreter.Representable
+import Representation.Cell
+import Representation.Representable
 import Control.Lens
 import Control.Monad.Except
 

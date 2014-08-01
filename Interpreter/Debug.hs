@@ -2,8 +2,8 @@ module Interpreter.Debug (
     dumpStack
 ) where
 
-import Interpreter.Cell
 import Interpreter.Machine
+import Representation.Cell
 import Control.Lens
 import Control.Monad.State
 

@@ -3,6 +3,7 @@ module Interpreter.Interpret (
 ) where
 
 import Bytecode.Ops
+import Bytecode.Function
 import Interpreter.Branching
 import Interpreter.Debug
 import Interpreter.Error
@@ -10,16 +11,16 @@ import Interpreter.LensHelpers
 import Interpreter.Machine
 import Interpreter.Memory
 import Interpreter.Monad
-import Interpreter.Representable
 import Interpreter.Stack
 import Interpreter.StackArithmetic
+import Representation.Representable
 import Control.Lens
 import Control.Monad.Except
 import Control.Monad.Reader
 import Control.Monad.State
-import Data.Vector
+import Data.Vector as V
 
-interpret :: FunctionSpace -> Machine -> IO ()
+interpret :: FunctionSpace Op -> Machine -> IO ()
 interpret funs machine = result >>= \x -> case x of
                                               ExitSuccess -> return ()
                                               err -> putStr "Error: " >> print err

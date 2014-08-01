@@ -1,4 +1,4 @@
-module Interpreter.Representable (
+module Representation.Representable (
     Representable,
     toRepresentation,
     fromRepresentation,
@@ -10,7 +10,7 @@ module Interpreter.Representable (
 ) where
 
 import Bytecode.Format
-import Interpreter.Cell
+import Representation.Cell
 import Data.Binary (Binary, encode, decodeOrFail)
 import Data.ByteString.Lazy (ByteString, pack, unpack)
 import Data.Proxy

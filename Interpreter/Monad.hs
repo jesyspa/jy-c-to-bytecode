@@ -5,6 +5,8 @@ module Interpreter.Monad (
     viewOr
 ) where
 
+import Bytecode.Ops
+import Bytecode.Function
 import Interpreter.Error
 import Interpreter.Machine
 import Control.Lens
@@ -12,7 +14,7 @@ import Control.Monad.Except
 import Control.Monad.Reader
 import Control.Monad.State
 
-type MonadStack m = (MonadReader FunctionSpace m, MonadState Machine m, MonadError InterpError m, MonadIO m)
+type MonadStack m = (MonadReader (FunctionSpace Op) m, MonadState Machine m, MonadError InterpError m, MonadIO m)
 
 fromMaybeOr :: (MonadError e m) => Maybe a -> e -> m a
 fromMaybeOr v e = maybe (throwError e) return v

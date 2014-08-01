@@ -5,8 +5,8 @@ module Interpreter.StackArithmetic (
 
 import Interpreter.FormatDispatch
 import Interpreter.Monad
-import Interpreter.Representable
 import Interpreter.Stack
+import Representation.Representable
 
 unaryOp' :: (Representable a, MonadStack m) => (Lambda (Hole -> Constant (m ())) a) -> Proxy a -> m ()
 unaryOp' (unwrapf -> f) _ = popValue >>= f
