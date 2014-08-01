@@ -16,8 +16,8 @@ unaryOp f = dispatch unaryOp' $ wrapf f
 
 binOp' :: (Representable a, MonadStack m) => (Lambda (Hole -> Hole -> Constant (m ())) a) -> Proxy a -> m ()
 binOp' (unwrapf -> f) _ = do
-    x <- popValue
     y <- popValue
+    x <- popValue
     f x y
 
 binOp :: MonadStack m => (forall a. NumericRep a => a -> a -> m ()) -> Format -> m ()
