@@ -4,7 +4,7 @@ module Interpreter.FormatDispatch (
     unwrapf,
     Lambda,
     Hole,
-    MStack
+    Constant
 ) where
 
 import Data.Proxy
@@ -14,35 +14,41 @@ import Interpreter.Monad
 
 -- We use this as a placeholder for a in the types
 data Hole
-data MStack a
+data Constant a
 
-data family Lambda :: * -> (* -> *) -> * -> *
+data family Lambda :: * -> * -> *
 
-newtype instance Lambda (Hole -> r) m a = LambdaTakingHole (a -> Lambda r m a)
-newtype instance Lambda (MStack ()) m a = LambdaMStack { getLambdaMStack :: m () }
-newtype instance Lambda Hole m a = LambdaHole { getLambdaHole :: a }
+newtype instance Lambda (Hole -> r) a = LambdaTakingHole (a -> Lambda r a)
+newtype instance Lambda (Constant c -> r) a = LambdaTakingConstant (c -> Lambda r a)
+newtype instance Lambda Hole a = LambdaHole { getLambdaHole :: a }
+newtype instance Lambda (Constant c) a = LambdaConstant { getLambdaConstant :: c }
 
 class LambdaLike fn where
-    type family UnderlyingFun fn (m :: * -> *) a
-    wrapf :: UnderlyingFun fn m a -> Lambda fn m a
-    unwrapf :: Lambda fn m a -> UnderlyingFun fn m a
+    type family UnderlyingFun fn a
+    wrapf :: UnderlyingFun fn a -> Lambda fn a
+    unwrapf :: Lambda fn a -> UnderlyingFun fn a
 
 instance LambdaLike r => LambdaLike (Hole -> r) where
-    type UnderlyingFun (Hole -> r) m a = a -> UnderlyingFun r m a
-    wrapf f = LambdaTakingHole (\x -> wrapf (f x))
+    type UnderlyingFun (Hole -> r) a = a -> UnderlyingFun r a
+    wrapf f = LambdaTakingHole (wrapf . f)
     unwrapf (LambdaTakingHole f) = unwrapf . f
 
-instance LambdaLike (MStack ()) where
-    type UnderlyingFun (MStack ()) m a = m ()
-    wrapf = LambdaMStack
-    unwrapf = getLambdaMStack
+instance LambdaLike r => LambdaLike (Constant c -> r) where
+    type UnderlyingFun (Constant c -> r) a = c -> UnderlyingFun r a
+    wrapf f = LambdaTakingConstant (wrapf . f)
+    unwrapf (LambdaTakingConstant f) = unwrapf . f
 
 instance LambdaLike Hole where
-    type UnderlyingFun Hole m a = a
+    type UnderlyingFun Hole a = a
     wrapf = LambdaHole
     unwrapf = getLambdaHole
 
-dispatch :: MonadStack m => (forall a. NumericRep a => Lambda fn m a -> Proxy a -> m ()) -> (forall a. NumericRep a => Lambda fn m a) -> Format -> m ()
+instance LambdaLike (Constant c) where
+    type UnderlyingFun (Constant c) a = c
+    wrapf = LambdaConstant
+    unwrapf = getLambdaConstant
+
+dispatch :: MonadStack m => (forall a. NumericRep a => Lambda fn a -> Proxy a -> m ()) -> (forall a. NumericRep a => Lambda fn a) -> Format -> m ()
 dispatch fn f = go
     where pr = Proxy
           go Byte = fn f (pr :: Proxy Word8)

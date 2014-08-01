@@ -6,7 +6,7 @@ module Bytecode.Representable (
     Format(..),
     formatSize,
     Proxy(..),
-    NumericRep
+    NumericRep,
 ) where
 
 import Data.Word
@@ -24,6 +24,7 @@ class (Binary a, Eq a, Ord a, Read a, Show a) => Representable a where
                                Left _ -> Nothing
     format :: Proxy a -> Format
 
+instance Representable Bool where format _ = Byte
 instance Representable Char where format _ = Byte
 instance Representable Word8 where format _ = Byte
 instance Representable Word16 where format _ = Short
@@ -41,3 +42,4 @@ instance NumericRep Word32
 instance NumericRep Word64
 instance NumericRep Float
 instance NumericRep Double
+

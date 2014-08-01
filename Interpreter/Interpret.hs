@@ -35,21 +35,30 @@ step = do
     ip._2 += 1
     exec opcode
 
+doThenPush :: (MonadStack m, NumericRep a, Representable b) => (a -> a -> b) -> a -> a -> m ()
+doThenPush f x y = pushValue $ f x y
+
 exec :: forall m. MonadStack m => Op -> m ()
 exec (LocalJmp x) = ip._2 .= x
-exec (LocalJmpIfZero fmt x) = monadicOp f fmt
+exec (LocalJmpIfZero fmt x) = unaryOp f fmt
     where f :: forall a. NumericRep a => a -> m ()
           f 0 = ip._2 .= x
           f _ = return ()
 exec (LoadImmediate x) = pushBS x
-exec (Dup fmt) = monadicOp (\x -> pushValue x >> pushValue x) fmt
-exec (Swap fmt) = monadicBinOp (\x y -> pushValue x >> pushValue y) fmt
+exec (Dup fmt) = unaryOp (\x -> pushValue x >> pushValue x) fmt
+exec (Swap fmt) = binOp (\x y -> pushValue x >> pushValue y) fmt
 exec WriteChar = popValue >>= liftIO . putChar
-exec (WriteValue fmt) = monadicOp (liftIO . putStr . show) fmt
+exec (WriteValue fmt) = unaryOp (liftIO . putStr . show) fmt
 exec ReadChar = liftIO getChar >>= pushValue
 exec Exit = throwError ExitSuccess
-exec (Add fmt) = binOp (+) fmt
-exec (Sub fmt) = binOp (-) fmt
-exec (Mul fmt) = binOp (*) fmt
+exec (Add fmt) = binOp (doThenPush (+)) fmt
+exec (Sub fmt) = binOp (doThenPush (-)) fmt
+exec (Mul fmt) = binOp (doThenPush (*)) fmt
+exec (Equal fmt) = binOp (doThenPush (==)) fmt
+exec (NotEqual fmt) = binOp (doThenPush (/=)) fmt
+exec (LessThan fmt) = binOp (doThenPush (<)) fmt
+exec (LessEqual fmt) = binOp (doThenPush (<=)) fmt
+exec (GreaterThan fmt) = binOp (doThenPush (>)) fmt
+exec (GreaterEqual fmt) = binOp (doThenPush (>=)) fmt
 exec DumpStack = get >>= dumpStack
 exec _ = throwError NotImplementedError

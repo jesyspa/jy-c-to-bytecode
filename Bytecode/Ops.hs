@@ -61,7 +61,7 @@ data Op =
     -- Stack bitwise operations
     And Format | Or Format | Xor Format | LeftShift Format | RightShift Format |
     -- Stack comparisons
-    Equal | NotEqual | LessThan | LessEqual | GreaterThan | GreaterEqual |
+    Equal Format | NotEqual Format | LessThan Format | LessEqual Format | GreaterThan Format | GreaterEqual Format |
     -- Type manipulations
     Cast Format Format |
     -- Pointer operations
