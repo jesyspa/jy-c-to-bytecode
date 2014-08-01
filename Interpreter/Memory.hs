@@ -1,5 +1,6 @@
 module Interpreter.Memory (
     memAlloc,
+    staticLoadValueAt,
     loadValueAt,
     storeValueAt
 ) where
@@ -31,31 +32,35 @@ memAlloc x = do
     heap %= M.insert addr vec
     pushValue addr
 
-loadValueAt' :: forall m a. (MonadStack m, Representable a) => Lambda (Constant Int) a -> Proxy a -> m ()
-loadValueAt' (unwrapf -> x) pr = do
+staticLoadValueAt :: forall m a. (MonadStack m, Representable a) => Int -> m a
+staticLoadValueAt n = do
     mem <- use heap
-    (k, vec) <- M.lookupLE x mem `fromMaybeOr` InvalidRead
-    let i = x - k
-        sz = formatSize $ format pr
+    (k, vec) <- M.lookupLE n mem `fromMaybeOr` InvalidRead
+    let i = n - k
+        sz = formatSize $ format (Proxy :: Proxy a)
     when (i + sz > V.length vec) $ throwError InvalidRead
     repr <- mapM (liftIO . V.read vec) [i..i+sz-1]
     let mval = fromRepresentation $ BS.pack $ map cellToWord8 repr
-    val <- mval `fromMaybeOr` InvalidRead :: m a
-    pushValue val
+    mval `fromMaybeOr` InvalidRead
+
+loadValueAt' :: forall m a. (MonadStack m, Representable a) => Lambda (Constant Int) a -> Proxy a -> m ()
+loadValueAt' (unwrapf -> x) _ = staticLoadValueAt x >>= (pushValue :: a -> m ())
 
 loadValueAt :: MonadStack m => Int -> Format -> m ()
 loadValueAt f = dispatch loadValueAt' $ wrapf f
 
-storeValueAt' :: forall m a. (MonadStack m, Representable a) => Lambda (Constant Int) a -> Proxy a -> m ()
-storeValueAt' (unwrapf -> x) pr = do
-    v <- popValue :: m a
+staticStoreValueAt :: forall m a. (MonadStack m, Representable a) => Int -> a -> m ()
+staticStoreValueAt n v = do
     mem <- use heap
-    (k, vec) <- M.lookupLE x mem `fromMaybeOr` InvalidWrite
-    let i = x - k
-        sz = formatSize $ format pr
+    (k, vec) <- M.lookupLE n mem `fromMaybeOr` InvalidWrite
+    let i = n - k
+        sz = formatSize $ format (Proxy :: Proxy a)
         repr = map (ByteCell None) $ BS.unpack $ toRepresentation v
     when (i + sz > V.length vec) $ throwError InvalidWrite
     mapM_ (liftIO . uncurry (V.write vec)) $ zip [i..] repr
+
+storeValueAt' :: forall m a. (MonadStack m, Representable a) => Lambda (Constant Int) a -> Proxy a -> m ()
+storeValueAt' (unwrapf -> x) _ = (popValue :: m a) >>= staticStoreValueAt x
 
 storeValueAt :: MonadStack m => Int -> Format -> m ()
 storeValueAt f = dispatch storeValueAt' $ wrapf f
